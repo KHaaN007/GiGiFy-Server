@@ -93,6 +93,44 @@ async function run() {
         })
 
 
+        /**Update Job From My Posted JOb**/
+
+
+        /****Update Step---01****/
+        app.get('/updateJob/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await jobCollection.findOne(query)
+            res.send(result)
+        })
+
+    
+
+
+        // Second
+        app.put('/updateJob/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = req.body
+            const options = { upsert: true }
+            const product = {
+                $set: {
+                    jobTitle: updateDoc.jobTitle,
+                    deadline: updateDoc.deadline,
+                    shortDescription: updateDoc.shortDescription,
+                    name: updateDoc.name,
+                    priceRange: updateDoc.priceRange
+
+                  
+                }
+            }
+
+            const result = await jobCollection.updateOne(filter, product, options)
+            res.send(result)
+
+        })
+
+
 
 
 
