@@ -37,6 +37,7 @@ async function run() {
 
         /**Add Job DataBase For Adding Data From Add Data**/
         const jobCollection = client.db("jobsDB").collection("job")
+        const bidCollection = client.db("bidsDB").collection("bid")
 
 
 
@@ -55,7 +56,7 @@ async function run() {
             res.send(result)
         })
 
-
+        /**Get Specific Data For Job Detail Page**/
         app.get('/jobDetail/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
@@ -64,9 +65,32 @@ async function run() {
         })
 
 
+        /**Deleted My Post Job From DataBase**/
+        app.delete('/postedJob/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await jobCollection.deleteOne(query)
+            res.send(result)
+        })
 
 
 
+        /**Create Or Post Data (*-Bid-* Data)**/
+        app.post('/bid', async (req, res) => {
+            // delete req.body._id
+            const newBid = req.body;
+            const result = await bidCollection.insertOne(newBid)
+            res.send(result)
+        })
+
+
+
+        /**Get All *-Bids-* Data From DataBase**/
+        app.get('/bids', async (req, res) => {
+            const bids = bidCollection.find();
+            const result = await bids.toArray()
+            res.send(result)
+        })
 
 
 
