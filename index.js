@@ -83,10 +83,8 @@ async function run() {
         // Auth Related Api 
         app.post('/jwt', async (req, res) => {
             const user = req.body
-            // console.log('User For token', user);
+        
             const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
-
-            // console.log('Create Token For Cookies', token);
             res.cookie('token', token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production', 
