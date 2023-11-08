@@ -13,6 +13,13 @@ app.use(express.json());
 
 
 
+
+
+
+
+
+
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.2jxlghj.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -104,16 +111,13 @@ async function run() {
             res.send(result)
         })
 
-    
-
-
         // Second
         app.put('/updateJob/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const updateDoc = req.body
             const options = { upsert: true }
-            const product = {
+            const job = {
                 $set: {
                     jobTitle: updateDoc.jobTitle,
                     deadline: updateDoc.deadline,
@@ -124,11 +128,42 @@ async function run() {
                   
                 }
             }
-
-            const result = await jobCollection.updateOne(filter, product, options)
+            const result = await jobCollection.updateOne(filter, job, options)
             res.send(result)
-
+            console.log(result);
+        
         })
+
+
+
+        app.get('/updateBidReq/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await bidCollection.findOne(query)
+            res.send(result)
+        })
+
+
+
+        app.patch('/updateBidReq/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = req.body
+            const options = { upsert: true }
+            const bid = {
+                $set: {
+                    status: updateDoc.status,
+                  
+                }
+            }
+            const result = await bidCollection.updateOne(filter, bid, options)
+            res.send(result)
+            console.log(result);
+        
+        })
+
+
+
 
 
 
