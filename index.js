@@ -1,13 +1,43 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
-const app = express()
+const app = express();
 const port = process.env.PORT || 5000;
 
 
 /**Midelware**/
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:5173'],
+    credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser())
+
+
+
+
+
+/**JWT Token**/
+const verifyToken = (req, res, next) => {
+    const token = req.cookies?.token;
+    console.log('Token in the middleware', token);
+    if (!token) {
+        return res.status(401).send({ message: 'Unauthorized' })
+    }
+    jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+        console.log(err);
+        if (err) {
+            console.log(decoded);
+            return res.status(401).send({ message: 'Unauthorized' })
+        }
+        req.user = decoded;
+
+        next()
+    })
+}
 
 
 
@@ -15,12 +45,7 @@ app.use(express.json());
 
 
 
-
-
-
-
-
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+// const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.2jxlghj.mongodb.net/?retryWrites=true&w=majority`;
 
 
@@ -48,6 +73,42 @@ async function run() {
 
 
 
+
+
+
+        // Auth Related Api 
+        app.post('/jwt', async (req, res) => {
+            const user = req.body
+            // console.log('User For token', user);
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
+
+            // console.log('Create Token For Cookies', token);
+            res
+            .cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production', 
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+                
+            })
+                .send({ token })
+        })
+
+
+        app.post('/logout', async (req, res) => {
+            const user = req.body;
+            console.log('logging out', user);
+            res
+                .clearCookie('token', { maxAge: 0, sameSite: 'none', secure: true })
+                .send({ success: true })
+        })
+
+
+
+
+
+
+
+
         /**Create Or Post Data (*-Job-* Data)**/
         app.post('/job', async (req, res) => {
             // delete req.body._id
@@ -64,7 +125,7 @@ async function run() {
         })
 
         /**Get Specific Data For Job Detail Page**/
-        app.get('/jobDetail/:id', async (req, res) => {
+        app.get('/jobDetail/:id',verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await jobCollection.findOne(query)
@@ -73,7 +134,7 @@ async function run() {
 
 
         /**Deleted My Post Job From DataBase**/
-        app.delete('/postedJob/:id', async (req, res) => {
+        app.delete('/postedJob/:id',verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await jobCollection.deleteOne(query)
@@ -83,7 +144,7 @@ async function run() {
 
 
         /**Create Or Post Data (*-Bid-* Data)**/
-        app.post('/bid', async (req, res) => {
+        app.post('/bid',verifyToken, async (req, res) => {
             // delete req.body._id
             const newBid = req.body;
             const result = await bidCollection.insertOne(newBid)
@@ -93,7 +154,7 @@ async function run() {
 
 
         /**Get All *-Bids-* Data From DataBase**/
-        app.get('/bids', async (req, res) => {
+        app.get('/bids',verifyToken, async (req, res) => {
             const bids = bidCollection.find();
             const result = await bids.toArray()
             res.send(result)
@@ -104,7 +165,7 @@ async function run() {
 
 
         /****Update Step---01****/
-        app.get('/updateJob/:id', async (req, res) => {
+        app.get('/updateJob/:id',verifyToken, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await jobCollection.findOne(query)
@@ -112,7 +173,7 @@ async function run() {
         })
 
         // Second
-        app.put('/updateJob/:id', async (req, res) => {
+        app.put('/updateJob/:id',verifyToken, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const updateDoc = req.body
@@ -125,13 +186,13 @@ async function run() {
                     name: updateDoc.name,
                     priceRange: updateDoc.priceRange
 
-                  
+
                 }
             }
             const result = await jobCollection.updateOne(filter, job, options)
             res.send(result)
             console.log(result);
-        
+
         })
 
 
@@ -153,13 +214,13 @@ async function run() {
             const bid = {
                 $set: {
                     status: updateDoc.status,
-                  
+
                 }
             }
             const result = await bidCollection.updateOne(filter, bid, options)
             res.send(result)
             console.log(result);
-        
+
         })
 
 
