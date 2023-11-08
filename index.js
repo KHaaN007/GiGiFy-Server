@@ -10,7 +10,11 @@ const port = process.env.PORT || 5000;
 
 /**Midelware**/
 app.use(cors({
-    origin: ['http://localhost:5173'],
+    origin: [
+        'http://localhost:5173',
+        'https://full-stack-website-marketplace.firebaseapp.com',
+        'https://full-stack-website-marketplace.web.app'
+    ],
     credentials: true
 }));
 app.use(express.json());
@@ -83,14 +87,12 @@ async function run() {
             const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
 
             // console.log('Create Token For Cookies', token);
-            res
-            .cookie('token', token, {
+            res.cookie('token', token, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production', 
                 sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-                
-            })
-                .send({ token })
+
+            }).send({success: true})
         })
 
 
@@ -134,7 +136,7 @@ async function run() {
 
 
         /**Deleted My Post Job From DataBase**/
-        app.delete('/postedJob/:id',verifyToken, async (req, res) => {
+        app.delete('/postedJob/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await jobCollection.deleteOne(query)
@@ -165,7 +167,7 @@ async function run() {
 
 
         /****Update Step---01****/
-        app.get('/updateJob/:id',verifyToken, async (req, res) => {
+        app.get('/updateJob/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await jobCollection.findOne(query)
@@ -173,7 +175,7 @@ async function run() {
         })
 
         // Second
-        app.put('/updateJob/:id',verifyToken, async (req, res) => {
+        app.put('/updateJob/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const updateDoc = req.body
@@ -231,8 +233,8 @@ async function run() {
 
 
 
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // await client.db("admin").command({ ping: 1 });
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
