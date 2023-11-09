@@ -144,7 +144,7 @@ async function run() {
 
 
         /**Create Or Post Data (*-Bid-* Data)**/
-        app.post('/bid',verifyToken, async (req, res) => {
+        app.post('/bid', async (req, res) => {
             // delete req.body._id
             const newBid = req.body;
             const result = await bidCollection.insertOne(newBid)
@@ -165,7 +165,7 @@ async function run() {
 
 
         /****Update Step---01****/
-        app.get('/updateJob/:id', async (req, res) => {
+        app.get('/updateJob/:id',  async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await jobCollection.findOne(query)
